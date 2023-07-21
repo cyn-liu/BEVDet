@@ -1,50 +1,3 @@
-# Copyright (c) Phigent Robotics. All rights reserved.
-# align_after_view_transfromation=True
-# mAP: 0.3940
-# mATE: 0.5789
-# mASE: 0.2812
-# mAOE: 0.4688
-# mAVE: 0.2822
-# mAAE: 0.2060
-# NDS: 0.5153
-# Eval time: 130.0s
-#
-# Per-class results:
-# Object Class	AP	ATE	ASE	AOE	AVE	AAE
-# car	0.615	0.398	0.154	0.073	0.273	0.191
-# truck	0.323	0.542	0.210	0.092	0.240	0.215
-# bus	0.365	0.680	0.197	0.079	0.571	0.308
-# trailer	0.199	0.925	0.245	0.437	0.185	0.096
-# construction_vehicle	0.110	0.812	0.519	1.057	0.098	0.396
-# pedestrian	0.459	0.630	0.304	0.645	0.353	0.192
-# motorcycle	0.379	0.600	0.260	0.726	0.372	0.245
-# bicycle	0.316	0.466	0.275	0.987	0.166	0.004
-# traffic_cone	0.588	0.370	0.350	nan	nan	nan
-# barrier	0.585	0.367	0.299	0.124	nan	nan
-
-# align_after_view_transfromation=False
-# mAP: 0.3986
-# mATE: 0.5708
-# mASE: 0.2808
-# mAOE: 0.4629
-# mAVE: 0.2779
-# mAAE: 0.2062
-# NDS: 0.5194
-# Eval time: 135.8s
-#
-# Per-class results:
-# Object Class	AP	ATE	ASE	AOE	AVE	AAE
-# car	0.620	0.389	0.153	0.073	0.265	0.191
-# truck	0.324	0.528	0.207	0.088	0.233	0.214
-# bus	0.371	0.673	0.197	0.086	0.566	0.305
-# trailer	0.201	0.916	0.245	0.431	0.178	0.096
-# construction_vehicle	0.115	0.810	0.517	1.016	0.107	0.399
-# pedestrian	0.466	0.624	0.304	0.652	0.348	0.191
-# motorcycle	0.387	0.582	0.260	0.731	0.363	0.250
-# bicycle	0.318	0.466	0.276	0.966	0.164	0.004
-# traffic_cone	0.591	0.361	0.349	nan	nan	nan
-# barrier	0.593	0.359	0.299	0.124	nan	nan
-
 _base_ = ['../_base_/datasets/nus-3d.py', '../_base_/default_runtime.py']
 # Global
 # If point cloud range is changed, the models should also change their point
@@ -90,7 +43,7 @@ multi_adj_frame_id_cfg = (1, 8+1, 1)
 
 model = dict(
     type='BEVDepth4D',
-    align_after_view_transfromation=False,
+    align_after_view_transfromation=True,
     num_adj=len(range(*multi_adj_frame_id_cfg)),
     img_backbone=dict(
         pretrained='torchvision://resnet50',
@@ -126,13 +79,13 @@ model = dict(
         type='FPN_LSS',
         in_channels=numC_Trans * 8 + numC_Trans * 2,
         out_channels=256),
-    pre_process=dict(
-        type='CustomResNet',
-        numC_input=numC_Trans,
-        num_layer=[2,],
-        num_channels=[numC_Trans,],
-        stride=[1,],
-        backbone_output_ids=[0,]),
+    # pre_process=dict(
+    #     type='CustomResNet',
+    #     numC_input=numC_Trans,
+    #     num_layer=[2,],
+    #     num_channels=[numC_Trans,],
+    #     stride=[1,],
+    #     backbone_output_ids=[0,]),
     pts_bbox_head=dict(
         type='CenterHead',
         in_channels=256,
