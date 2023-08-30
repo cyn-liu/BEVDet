@@ -21,3 +21,8 @@ export yaml required by [bevdet-tensorrt-cpp](https://github.com/LCH1238/bevdet-
 ```shell
 python tools/export/export_yaml.py configs/bevdet/bevdet-r50-4dlongterm-depth-cbgs.py --prefix='bevdet_lt_d'
 ```
+
+test
+```shell
+python tools/export/test.py configs/bevdet/bevdet-r50-4dlongterm-depth-cbgs.py path_to_results
+```

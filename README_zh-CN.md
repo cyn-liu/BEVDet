@@ -22,3 +22,8 @@ python tools/export/export_onnx.py configs/bevdet/bevdet-r50-4dlongterm-depth-cb
 ```shell
 python tools/export/export_yaml.py configs/bevdet/bevdet-r50-4dlongterm-depth-cbgs.py --prefix='bevdet_lt_d'
 ```
+
+根据生成的boxes来评测
+```shell
+python tools/export/test.py configs/bevdet/bevdet-r50-4dlongterm-depth-cbgs.py path_to_results
+```
