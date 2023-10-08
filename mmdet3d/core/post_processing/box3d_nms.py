@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import numba
+# import numba
 import numpy as np
 import torch
 from mmcv.ops import nms, nms_rotated
@@ -178,7 +178,7 @@ def aligned_3d_nms(boxes, scores, classes, thresh):
     return indices
 
 
-@numba.jit(nopython=True)
+# @numba.jit(nopython=True)
 def circle_nms(dets, thresh, post_max_size=83):
     """Circular NMS.
 

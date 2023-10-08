@@ -28,6 +28,9 @@ from .pointnet_modules import (PAConvCUDASAModule, PAConvCUDASAModuleMSG,
                                build_sa_module)
 from .sparse_block import (SparseBasicBlock, SparseBottleneck,
                            make_sparse_convmodule)
+from .bevdet_ops.onnx_ops import BEVPool, AlignBEV, GatherBEV, Preprocess
+from .bevdet_ops.bevdet_ops import test_preprocess, test_alignbev, test_gather_bev
+
 
 __all__ = [
     'nms', 'soft_nms', 'RoIAlign', 'roi_align', 'get_compiler_version',
@@ -44,5 +47,6 @@ __all__ = [
     'get_compiler_version', 'assign_score_withk', 'get_compiling_cuda_version',
     'Points_Sampler', 'build_sa_module', 'PAConv', 'PAConvCUDA',
     'PAConvSAModuleMSG', 'PAConvSAModule', 'PAConvCUDASAModule',
-    'PAConvCUDASAModuleMSG', 'RoIPointPool3d'
+    'PAConvCUDASAModuleMSG', 'RoIPointPool3d', 'BEVPool', 'AlignBEV', 'GatherBEV',
+    'Preprocess', 'test_preprocess', 'test_alignbev', 'test_gather_bev'
 ]

@@ -138,3 +138,9 @@ deploy_out/data_infos/
 *.onnx
 
 tools/export/test_onnx.py
+
+results/
+
+tools/export/quant_bevdet.py
+tools/export/test_bevdet_one.py
+tools/export/calib_dataset.py

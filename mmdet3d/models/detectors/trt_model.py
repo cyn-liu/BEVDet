@@ -5,7 +5,7 @@ from mmdet3d.core import bbox3d2result
 from mmdet.models import DETECTORS
 from .. import builder
 from .base import Base3DDetector
-
+from mmdet3d.ops import BEVPool, AlignBEV, GatherBEV, Preprocess
 
 class ImageStage(torch.nn.Module):
     def __init__(self, img_backbone=None, img_neck=None, img_view_transformer=None, **kwargs):
@@ -60,11 +60,11 @@ class ImageStageDepth(ImageStage):
         bda       : 1 x 3 x 3
         '''
         x = self.img_backbone(img) 
-        x = self.img_neck(x)  # 6 x 512 x h x w
+        r = self.img_neck(x)  # 6 x 512 x h x w
         
         mlp_input = self.img_view_transformer.get_mlp_input(
                                             rot, tran, intrin, post_rot, post_tran, bda)
-        x = self.img_view_transformer.depth_net(x, mlp_input)
+        x, mlp_bn, con_se, depth_se = self.img_view_transformer.depth_net(r, mlp_input)
         
         D = self.img_view_transformer.D
         C = self.img_view_transformer.out_channels
@@ -73,7 +73,7 @@ class ImageStageDepth(ImageStage):
         
         x = x[:, D : D + C]        # 6 x C x h x w
         x = x.permute(0, 2, 3, 1)  # 6 x h x w x C
-        return x.contiguous(), depth.contiguous()
+        return x.contiguous(), depth.contiguous(), mlp_input.contiguous(), r.contiguous(), mlp_bn.contiguous(), con_se.contiguous(), depth_se.contiguous()
     
 
 class BEVStage(torch.nn.Module):
@@ -199,3 +199,119 @@ class BEVModel(Base3DDetector):
                 f.write(out)
                 
         print("Done!")        
+
+
+@DETECTORS.register_module()
+class BEVONE(Base3DDetector):
+    def __init__(self,                
+                img_backbone=None,
+                img_neck=None,
+                img_view_transformer=None, 
+                img_bev_encoder_backbone=None, 
+                img_bev_encoder_neck=None, 
+                pts_bbox_head=None,
+                train_cfg=None,
+                test_cfg=None,
+                pretrained=None,
+                use_depth=False,
+                align_after_view_transfromation=True,
+                num_adj=0,
+                pre_process=None,
+                **kwargs):
+        super(BEVONE, self).__init__(**kwargs)
+        
+        assert img_backbone != None and img_neck != None and img_view_transformer != None and \
+               img_bev_encoder_backbone != None and img_bev_encoder_neck != None and pts_bbox_head != None
+        self.use_depth = use_depth
+        pts_train_cfg = train_cfg.pts if train_cfg else None
+        pts_bbox_head.update(train_cfg=pts_train_cfg)
+        pts_test_cfg = test_cfg.pts if test_cfg else None
+        pts_bbox_head.update(test_cfg=pts_test_cfg)
+        
+        assert img_backbone != None and img_neck != None and img_view_transformer != None
+        self.img_backbone = builder.build_backbone(img_backbone)
+        self.img_neck = builder.build_neck(img_neck)
+        self.img_view_transformer = builder.build_neck(img_view_transformer)    
+        
+        assert img_bev_encoder_backbone != None and img_bev_encoder_neck != None and pts_bbox_head != None
+        self.img_bev_encoder_backbone = builder.build_backbone(img_bev_encoder_backbone)
+        self.img_bev_encoder_neck = builder.build_neck(img_bev_encoder_neck)
+        self.pts_bbox_head = builder.build_head(pts_bbox_head)
+        
+        self.preprocess = Preprocess()
+        self.bevpool = BEVPool()
+        self.align = AlignBEV()
+        
+        self.gather_bev = GatherBEV()
+    
+    def forward(self, 
+                img,
+                mean,
+                std,
+                cam_params,
+                ranks_depth,
+                ranks_feat, 
+                ranks_bev,
+                interval_starts,
+                interval_lengths,
+                adj_bevfeats,
+                adj_transforms,
+                flag,
+                ):
+        '''
+        img              : B*6 x 3 x 256 x 704
+        mean             : 3
+        std              : 3
+        cam_params       : B x 6 x 27
+        ranks_depth      : ~179535
+        ranks_feat       : ~179535
+        ranks_bev        : ~179535
+        interval_starts  : ~11404
+        interval_lengths : ~11404
+        adj_bevfeats     : B x 8 x 80 x 128 x 128, ...
+        adj_transforms   : B x 8 x 6
+        flag             : B
+        '''
+        # image stage
+        img = self.preprocess.apply(img, mean, std)
+        x = self.img_backbone(img) 
+        x = self.img_neck(x)  # B*6 x 512 x h x w
+        
+        depth, x = self.img_view_transformer.depth_net(x, cam_params)
+        
+        D = self.img_view_transformer.D
+        C = self.img_view_transformer.out_channels
+        
+        depth = depth.softmax(dim=1).contiguous()  # b*6 x 118 x 16 x 44
+        
+        x = x.contiguous()                 # b*6 x C x h x w
+        # x = x.permute(0, 2, 3, 1).contiguous()         # b*6 x 16 x 44 x 80
+        
+        # bevpool
+        curr_bevfeat = self.bevpool.apply(depth, x, ranks_depth, ranks_feat, ranks_bev, interval_starts, interval_lengths)  # 80 x 128 x 128
+        
+        
+        adj_bevfeats = self.align.apply(adj_bevfeats, adj_transforms)  # b x 8 x 80 x 128 * 128
+        # adj_bevfeats = torch.cat(adj_bevs, dim=0).contiguous()
+        
+        x = self.gather_bev.apply(adj_bevfeats, curr_bevfeat, flag)
+        # print(bevfeats.size())
+        # # 1 x 720 x 128 x 128
+        # bevfeats = torch.cat((curr_bevfeat, *adj_bevfeats), dim=0).contiguous()
+        
+        # x = bevfeats
+        x = self.img_bev_encoder_backbone(x)
+        x = self.img_bev_encoder_neck(x)
+        x = self.pts_bbox_head([x])        
+        x = x[0][0]
+        return x['reg'], x['height'], x['dim'], x['rot'], x['vel'], x['heatmap'], curr_bevfeat
+    
+    def aug_test(self, ):
+        assert 0
+    
+    def extract_feat(self, ):
+        assert 0 
+
+    def simple_test(self, ):
+        assert 0
+

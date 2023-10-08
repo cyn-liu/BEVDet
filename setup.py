@@ -234,6 +234,18 @@ if __name__ == '__main__':
                     'src/bev_pool_cuda.cu',
                 ],
             ),
+            make_cuda_ext(
+                name='bevdet_ops_ext',
+                module='mmdet3d.ops.bevdet_ops',
+                sources=[
+                    'src/bev_ops.cpp',
+                    'src/alignbev.cu',
+                    'src/preprocess.cu',
+                    'src/gatherbev.cu',
+                    'src/bevpool.cu',
+                ],
+                extra_include_path=['src/common.h']
+            ),
         ],
         cmdclass={'build_ext': BuildExtension},
         zip_safe=False)
