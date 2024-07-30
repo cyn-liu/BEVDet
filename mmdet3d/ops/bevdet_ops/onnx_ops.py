@@ -63,25 +63,26 @@ class BEVPool(torch.autograd.Function):
         
         return out
     
-
+#The model trained using nuscenes, resize_radio=0.44, crop_h=140, crop_w=0
+#The model trained using TIER4 dataset, resize_radio=0.5, crop_h=284, crop_w=16
 class Preprocess(torch.autograd.Function):
     @staticmethod
     def symbolic(g,
                  img,
                  mean,
                  std,
-                 crop_h=140,
-                 crop_w=0,
-                 resize_radio=0.44,
+                 crop_h=284,
+                 crop_w=16,
+                 resize_radio=0.5,
                  ):
         return g.op(
             'bevdet::Preprocess',
              img,
              mean,
              std,
-             crop_h_i=140,
-             crop_w_i=0,
-             resize_radio_f=0.44,
+             crop_h_i=284,
+             crop_w_i=16,
+             resize_radio_f=0.5,
              
         )
     @staticmethod
@@ -89,9 +90,9 @@ class Preprocess(torch.autograd.Function):
                 img, 
                 mean,
                 std,
-                resize_radio=0.44, 
-                crop_h=140,
-                crop_w=0):
+                resize_radio=0.5, 
+                crop_h=284,
+                crop_w=16):
         N, C, H, W = img.size()
         
         out = mean.new_zeros((N, C, int(H * resize_radio - crop_h), int(W * 4 * resize_radio - crop_w)))

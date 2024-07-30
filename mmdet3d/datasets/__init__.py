@@ -9,6 +9,7 @@ from .lyft_dataset import LyftDataset
 from .nuscenes_dataset import NuScenesDataset
 from .nuscenes_mono_dataset import NuScenesMonoDataset
 from .nuscenes_dataset_occ import NuScenesDatasetOccpancy
+from .tier4_dataset import T4Dataset
 # yapf: disable
 from .pipelines import (AffineResize, BackgroundPointsFilter, GlobalAlignment,
                         GlobalRotScaleTrans, IndoorPatchPointSample,
@@ -21,6 +22,10 @@ from .pipelines import (AffineResize, BackgroundPointsFilter, GlobalAlignment,
                         RandomFlip3D, RandomJitterPoints, RandomRotate,
                         RandomShiftScale, RangeLimitedRandomCrop,
                         VoxelBasedPointSampler)
+from .nuscenes_utils import (DetectionConfig,
+                                  nuScenesDetectionEval)
+from .nuscenes_utils import (class_mapping_kitti2nuscenes, format_nuscenes_metrics,
+                                   format_nuscenes_metrics_table, transform_det_annos_to_nusc_annos)
 # yapf: enable
 from .s3dis_dataset import S3DISDataset, S3DISSegDataset
 from .scannet_dataset import (ScanNetDataset, ScanNetInstanceSegDataset,
@@ -45,5 +50,5 @@ __all__ = [
     'RandomJitterPoints', 'ObjectNameFilter', 'AffineResize',
     'RandomShiftScale', 'LoadPointsFromDict', 'PIPELINES',
     'RangeLimitedRandomCrop', 'RandomRotate', 'MultiViewWrapper',
-    'NuScenesDatasetOccpancy'
+    'NuScenesDatasetOccpancy', 'T4Dataset', 'nuScenesDetectionEval'
 ]

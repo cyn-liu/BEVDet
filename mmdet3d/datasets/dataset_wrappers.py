@@ -44,7 +44,7 @@ class CBGSDataset(object):
         duplicated_samples = sum(
             [len(v) for _, v in class_sample_idxs.items()])
         class_distribution = {
-            k: len(v) / duplicated_samples
+            k: len(v) / duplicated_samples + 1e-12 #由于tier4数据集label=5时，比例为0，为了避免后面除数为0
             for k, v in class_sample_idxs.items()
         }
 

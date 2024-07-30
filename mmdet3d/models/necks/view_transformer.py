@@ -520,8 +520,8 @@ class DepthNet(nn.Module):
         depth_se = self.depth_mlp(mlp_input)[..., None, None]
         depth = self.depth_se(x, depth_se)
         depth = self.depth_conv(depth)
-        # return torch.cat([depth, context], dim=1)
-        return depth, context  # for export onnx
+        return torch.cat([depth, context], dim=1)
+        #return depth, context  # for export onnx
         
 
 

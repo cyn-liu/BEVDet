@@ -17,7 +17,7 @@ data_config = {
     'Ncams':
     6,
     'input_size': (256, 704),
-    'src_size': (900, 1600),
+    'src_size': (1080, 1440),
 
     # Augmentation
     'resize': (-0.06, 0.11),
@@ -149,8 +149,8 @@ model = dict(
 )
 
 # Data
-dataset_type = 'NuScenesDataset'
-data_root = 'data/nuscenes/'
+dataset_type = 'T4Dataset'
+data_root = 'data/Odaiba_JT_v1.0/'
 file_client_args = dict(backend='disk')
 
 bda_aug_conf = dict(
@@ -227,8 +227,10 @@ share_data_config = dict(
 )
 
 test_data_config = dict(
+    type=dataset_type,
+    data_root=data_root,
     pipeline=test_pipeline,
-    ann_file=data_root + 'bevdetv2-nuscenes_infos_val.pkl')
+    ann_file=data_root + 'bevdetv2-tier4_infos_val.pkl')
 
 data = dict(
     samples_per_gpu=8,
@@ -237,7 +239,7 @@ data = dict(
         type='CBGSDataset',
         dataset=dict(
         data_root=data_root,
-        ann_file=data_root + 'bevdetv2-nuscenes_infos_train.pkl',
+        ann_file=data_root + 'bevdetv2-tier4_infos_train.pkl',
         pipeline=train_pipeline,
         classes=class_names,
         test_mode=False,
@@ -261,7 +263,7 @@ lr_config = dict(
     warmup_iters=200,
     warmup_ratio=0.001,
     step=[20,])
-runner = dict(type='EpochBasedRunner', max_epochs=20)
+runner = dict(type='EpochBasedRunner', max_epochs=30)
 
 custom_hooks = [
     dict(

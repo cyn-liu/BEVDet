@@ -100,6 +100,7 @@ if __name__ == '__main__':
     B = 1
     
     img_H, img_W = cfg.data_config['input_size']
+    src_H, src_W = cfg.data_config['src_size']
     downsample_factor = cfg.model.img_view_transformer.downsample
     feat_w, feat_h = img_H // downsample_factor, img_W // downsample_factor
     D = len(torch.arange(*cfg.grid_config['depth']))  
@@ -108,7 +109,8 @@ if __name__ == '__main__':
     bev_w = len(torch.arange(*cfg.grid_config['y']))
     bev_inchannels = cfg.model.img_bev_encoder_backbone.numC_input
     
-    img_input = torch.zeros([6*B, 3, 900, 400], dtype=torch.int32, device=f'cuda:{args.gpu_id}')
+    #img_input = torch.zeros([6*B, 3, 900, 400], dtype=torch.int32, device=f'cuda:{args.gpu_id}')
+    img_input = torch.zeros([6*B, 3, src_H, int(src_W/4)], dtype=torch.int32, device=f'cuda:{args.gpu_id}')
     mean = torch.rand([3], dtype=torch.float32, device=f'cuda:{args.gpu_id}')
     std = torch.rand([3], dtype=torch.float32, device=f'cuda:{args.gpu_id}')
     
